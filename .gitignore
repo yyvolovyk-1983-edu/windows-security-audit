@@ -1,0 +1,15 @@
+# Скріншоти з особистими даними
+*.png
+*.jpg
+*.jpeg
+
+# Логи з конфігурацією системи
+*_out.txt
+*_log.txt
+harden_log_*.txt
+
+# Playwright артефакти
+.playwright-mcp/
+
+# Тимчасові файли
+*.tmp
