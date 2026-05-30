@@ -1,97 +1,124 @@
-# Windows 11 Security Audit & Hardening
+<div align="center">
 
-Навчальний проект з кібербезпеки — ХНУА, 2026  
-Автор: Євген Воловик | y.y.volovyk@student.khai.edu
+# Windows Security Audit & Hardening
+
+**PowerShell-скрипт комплексного аудиту та захисту Windows 11**
+
+[![PowerShell](https://img.shields.io/badge/PowerShell-5391FE?style=for-the-badge&logo=powershell&logoColor=white)](https://github.com/yyvolovyk-1983-edu/windows-security-audit)
+[![Platform](https://img.shields.io/badge/Windows_11-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/yyvolovyk-1983-edu/windows-security-audit)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+[![Admin](https://img.shields.io/badge/Requires-Administrator-red?style=for-the-badge)]()
+
+</div>
 
 ---
 
-## Опис
+## Що робить скрипт
 
-Комплексний аудит безпеки Windows 11 Pro системи та домашньої мережі з подальшим усуненням виявлених вразливостей.
+`harden_windows.ps1` — автоматизований аудит та захист Windows 11 Pro.
+Перевіряє 12 категорій ризиків, усуває вразливості та генерує звіт з підсумками.
 
-## Що було перевірено
+---
 
-### ПК (Windows 11 Pro Build 26200)
-- Локальні облікові записи та їх привілеї
-- Запущені процеси та служби
-- Відкриті мережеві порти (TCP/UDP)
-- Налаштування Windows Defender та Secure Boot
-- Правила брандмауера
-- Автозапуск (реєстр, планувальник задач)
-- Цифрові підписи процесів
-- BIOS/UEFI: Secure Boot, TPM, VBS, HVCI
-- Браузери та розширення
-- Сертифікати (Root CA, Intermediate CA)
-- Інструменти віддаленого доступу
+## Що перевіряє та виправляє
 
-### Мережа (Xiaomi Mi Router AX1800 / RM1800)
-- Підключені пристрої та їх трафік
-- Налаштування VPN (виявлено небезпечний PPTP)
-- UPnP, port forwarding
-- MAC-фільтрація та її обхід
-- Спроба оновлення прошивки
+| # | Категорія | Дія |
+|---|---|---|
+| 1 | Облікові записи без пароля | Блокує мережевий вхід через реєстр |
+| 2 | Guest / DefaultAccount | Вимикає невикористовувані системні акаунти |
+| 3 | Політика блокування | 5 спроб → блокування на 30 хвилин |
+| 4 | Автологін | Видаляє збережені облікові дані автовходу |
+| 5 | SMBv1 / SMBv2 | Повністю вимикає застарілі протоколи |
+| 6 | NetBIOS over TCP/IP | Вимикає на всіх мережевих інтерфейсах |
+| 7 | Небезпечні порти | Firewall-правила для 9 портів (RDP, WinRM, Telnet, VNC, NetBIOS) |
+| 8 | Віддалені служби | Зупиняє TermService, WinRM, RemoteRegistry, Remote Assistance |
+| 9 | PowerShell v2 | Видаляє застарілий компонент (вектор обходу логування) |
+| 10 | ScriptBlock Logging | Вмикає детальне логування PowerShell для форензіки |
+| 11 | Audit Policies | Активує аудит облікових записів, входів, процесів |
+| 12 | Windows Defender | Запускає повне сканування у фоні |
 
-## Виявлені вразливості
+---
 
-| # | Вразливість | Ризик | Статус |
-|---|------------|-------|--------|
-| 1 | Несанкціонований обліковий запис `UserDaily` без пароля | Критичний | ✅ Видалено |
-| 2 | VPNBook PPTP (MS-CHAPv2, зламується за 24 год) | Високий | ✅ Видалено |
-| 3 | SMB порт 445 відкритий | Середній | ✅ Заблоковано |
-| 4 | Remote Assistance увімкнено | Середній | ✅ Вимкнено |
-| 5 | Пристрій обходить MAC-блокування роутера | Середній | ⚠️ Задокументовано |
-| 6 | RDP/WinRM/RemoteRegistry активні | Середній | ✅ Вимкнено |
-| 7 | PowerShell ScriptBlock Logging вимкнено | Середній | ✅ Увімкнено |
-| 8 | Жодного Full Scan Defender за весь час | Низький | ✅ Запущено |
-| 9 | PPTP VPN на роутері | Критичний | ✅ Видалено |
-| 10 | LimitBlankPasswordUse не встановлено | Середній | ✅ Виправлено |
+## Вимоги
 
-## Застосовані заходи захисту
+- Windows 11 Pro (протестовано на Build 26200)
+- PowerShell 5.1+
+- **Права адміністратора** (обов'язково)
 
-```
-✅ Видалення несанкціонованого облікового запису
-✅ Блокування мережевого входу без пароля (LimitBlankPasswordUse=1)
-✅ Account Lockout: 5 спроб → 30 хв блокування
-✅ SMBv1 та SMBv2 вимкнено
-✅ NetBIOS over TCP/IP вимкнено
-✅ Firewall: заблоковано TCP 445, 3389, 5985, 5986, 23, 5900 та UDP 137-139
-✅ Remote Desktop, WinRM, Remote Registry — вимкнено та зупинено
-✅ Remote Assistance — вимкнено (14 firewall правил)
-✅ PowerShell v2 — вимкнено (запобігання обходу AMSI)
-✅ ScriptBlock Logging — увімкнено (Event ID 4104)
-✅ Audit Policies: Account Management, Logon/Logoff, Process Creation
-✅ Windows Defender Full Scan запущено (перше за всю історію системи)
-✅ PPTP VPN видалено з роутера
+---
+
+## Використання
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\scripts\harden_windows.ps1
 ```
 
-## Інструменти
+---
 
-- **Nmap 7.80** — сканування портів мережевих пристроїв
-- **PowerShell 5.1** — аудит та hardening ПК
-- **Windows Defender** — антивірусне сканування
-- **Claude Code** — автоматизація аудиту
+## Приклад виводу
+
+```
+==============================
+ Windows Security Hardening
+==============================
+
+[ACCOUNTS]
+  [OK]   Мережевий вхід без пароля — заблоковано
+  [OK]   Guest account — вимкнено
+
+[NETWORK]
+  [OK]   SMBv1 — вимкнено
+  [OK]   SMBv2 — вимкнено
+  [OK]   NetBIOS — вимкнено на 2 інтерфейсах
+
+[FIREWALL]
+  [OK]   Заблоковано порти: 445, 3389, 5985, 23, 5900, 137-139
+
+[LOGGING]
+  [OK]   ScriptBlock Logging — увімкнено
+  [OK]   Audit Policies — налаштовано
+
+==============================
+ Результат: 14 OK | 2 WARN | 0 FAIL
+==============================
+```
+
+---
+
+## Виявлені вразливості (реальний кейс)
+
+| Критичність | Вразливість |
+|---|---|
+| 🔴 Critical | Обліковий запис без пароля з мережевим доступом |
+| 🔴 Critical | SMBv1 активовано (вектор WannaCry/EternalBlue) |
+| 🟠 High | WinRM активний — віддалене виконання команд |
+| 🟠 High | RemoteRegistry — зовнішній доступ до реєстру |
+| 🟡 Medium | NetBIOS активний — витік імен в мережі |
+| 🟡 Medium | PowerShell v2 встановлено (обхід логування) |
+| 🟡 Medium | Відсутня політика блокування облікових записів |
+
+**Всі вразливості усунені скриптом автоматично.**
+
+---
 
 ## Структура репозиторію
 
 ```
 windows-security-audit/
-├── scripts/
-│   └── harden_windows.ps1   # Скрипт зміцнення безпеки Windows 11
-└── README.md
+└── scripts/
+    └── harden_windows.ps1
 ```
-
-## Використання скрипту
-
-```powershell
-# Відкрийте PowerShell від імені Адміністратора
-Set-ExecutionPolicy Bypass -Scope Process -Force
-& ".\scripts\harden_windows.ps1"
-```
-
-## Висновки
-
-Система мала кілька серйозних вразливостей, зокрема несанкціонований обліковий запис без пароля та небезпечний VPN-протокол PPTP на роутері. Всі критичні та середні ризики усунено. Рекомендується регулярно повторювати аудит та оновлювати прошивку роутера при появі нових версій.
 
 ---
 
-*Проект виконано в навчальних цілях. Усі дії проводились на власній інфраструктурі.*
+> **Увага:** Запускайте скрипт лише на системах, де маєте **письмовий дозвіл** або є власником.
+
+---
+
+<div align="center">
+
+**Автор:** [Євген Воловик](https://github.com/yyvolovyk-1983-edu) · Харків, Україна
+📧 y.y.volovyk@student.khai.edu · [LinkedIn](https://www.linkedin.com/in/yevhen-volovyk/)
+
+</div>
