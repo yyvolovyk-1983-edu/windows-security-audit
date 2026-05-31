@@ -1,6 +1,6 @@
 ﻿# Звіт про зміни брандмауера Windows
 
-**Дата:** 2026-05-31 (оновлено 2026-05-31)
+**Дата:** 2026-05-31 (оновлено 2026-05-31, доповнено UAC та телеметрія)
 **Система:** Windows 11 Pro
 **Виконав:** Yevhen Volovyk
 
@@ -95,6 +95,27 @@
 | 27060,50881,50882 | steam    | Лише локально (127.0.0.1)     |
 | 49664-49669 | Windows RPC     | Динамічні, стандартні         |
 | 49668       | jhi_service     | Лише локально (::1)           |
+
+---
+
+## Додаткові зміни системи (2026-05-31)
+
+### UAC — підвищення рівня
+- **Параметр:** `ConsentPromptBehaviorAdmin`
+- **Було:** 2 (запитувати лише при змінах програмами)
+- **Стало:** 5 (завжди сповіщати)
+- **Розташування:** `HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System`
+- **Причина:** Максимальний рівень захисту від несанкціонованих змін системи.
+
+### DiagTrack (телеметрія Microsoft) — вимкнено
+- **Служба DiagTrack:** Stopped / Disabled
+- **Реєстр:** `HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection` → `AllowTelemetry = 0`
+- **Причина:** Зменшення передачі даних до Microsoft, захист конфіденційності.
+
+#### Команди для скасування
+    Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name ConsentPromptBehaviorAdmin -Value 2
+    Set-Service -Name DiagTrack -StartupType Automatic; Start-Service -Name DiagTrack
+    Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection" -Name AllowTelemetry -Value 1
 
 ---
 
