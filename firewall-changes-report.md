@@ -1,6 +1,6 @@
 ﻿# Звіт про зміни брандмауера Windows
 
-**Дата:** 2026-05-31 (оновлено 2026-05-31, доповнено UAC та телеметрія)
+**Дата:** 2026-05-31 (оновлено 2026-05-31, доповнено UAC, телеметрія, автозапуск)
 **Система:** Windows 11 Pro
 **Виконав:** Yevhen Volovyk
 
@@ -116,6 +116,42 @@
     Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name ConsentPromptBehaviorAdmin -Value 2
     Set-Service -Name DiagTrack -StartupType Automatic; Start-Service -Name DiagTrack
     Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection" -Name AllowTelemetry -Value 1
+
+---
+
+## Автозапуск — очищення (2026-05-31)
+
+### Видалено з реєстру (HKCU Run)
+
+| Запис | Значення | Причина видалення |
+|-------|----------|-------------------|
+| `Steam` | `steam.exe -silent` | Не потрібен при старті системи |
+| `OneDriveSetup` | `OneDriveSetup.exe /thfirstsetup` | Незавершене налаштування, не потрібне |
+
+### Вимкнено заплановані задачі
+
+| Задача | Причина |
+|--------|---------|
+| MicrosoftEdgeUpdateTaskMachineUA | Автооновлення Edge — не потрібне |
+| MicrosoftEdgeUpdateTaskMachineCore | Автооновлення Edge — не потрібне |
+| RunPlatformExperienceHelper_Metrics | Google Chrome метрики — не потрібні |
+| RunPlatformExperienceHelper_Daily | Google Chrome метрики — не потрібні |
+| RunPlatformExperienceHelperOnUnlock | Google Chrome метрики — не потрібні |
+
+### Залишено в автозапуску
+
+| Запис | Причина |
+|-------|---------|
+| `SecurityHealth` (HKLM) | Windows Defender — обов'язковий |
+| `org.openvpn.client` (HKCU) | OpenVPN Connect — за бажанням користувача |
+| `npcapwatchdog` (задача) | Npcap — потрібен для мережевих інструментів |
+| `GoogleUpdaterTask` (задача) | Оновлення Chrome — залишено активним |
+
+#### Команди для скасування
+    # Відновити Steam в автозапуску
+    Set-ItemProperty "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" -Name "Steam" -Value '"C:\Program Files (x86)\Steam\steam.exe" -silent'
+    # Увімкнути задачі Edge
+    Get-ScheduledTask | Where-Object {$_.TaskName -like "MicrosoftEdgeUpdate*"} | Enable-ScheduledTask
 
 ---
 
